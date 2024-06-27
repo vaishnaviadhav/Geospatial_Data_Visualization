@@ -32,7 +32,7 @@
         }
         .legend {
             background: rgba(255, 255, 255, 0.6);
-            padding: 10px;
+            padding: 8px;
             line-height: 24px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -55,15 +55,15 @@
             margin-left: 25px;
         }
         .ndvi-legend {
-            bottom: 1px;
+            top: 1px;
             right: 10px;
         }
         .ele-legend {
-            top: 254px;
+            top: 250px;
             right: 85px;
         }
         .landcover-legend {
-            top: 258px;
+            top: 255px;
             right: 10px;
         }
         .map-title {
@@ -78,7 +78,7 @@
             text-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5);;
         }
         .info {
-            top: 5px;
+            top: 1px;
             right: 145px;
             padding: 6px 8px;
             font: 14px/16px Arial, Helvetica, sans-serif;
@@ -95,7 +95,7 @@
             background: rgba(255, 255, 255, 0.6);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             border-radius: 5px;
-            top: 5px;
+            top: 1px;
             right: 10px;
             z-index: 1000;
         }
@@ -229,32 +229,32 @@
 
         // add vector data
         // add boundary of aoi
-        var boundary = L.Geoserver.wms("http://192.168.1.2:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Abuffalo_bill&bbox=-109.3024461051902%2C44.3979530114709%2C-109.22635671141086%2C44.47404527068388&width=767&height=768&srs=EPSG%3A4269&styles=&format=application/openlayers", {
+        var boundary = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/wms", {
             layers: "dr_test:buffalo_bill"
         });
         boundary.addTo(map);
 
         // add raster data
         // add satellite image
-        var satelliteLayer = L.Geoserver.wms("http://192.168.1.2:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Araw&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        var satelliteLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/wms", {
             layers: "dr_test:raw"
         });
         satelliteLayer.addTo(map);
 
         // add ndvi data
-        var ndviLayer = L.Geoserver.wms("http://192.168.1.2:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Andvi&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        var ndviLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/wms", {
             layers: "dr_test:ndvi"
         });
         ndviLayer.addTo(map);
 
         // add elevation data
-        var eleLayer = L.Geoserver.wms("http://192.168.1.2:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Aelevation&bbox=-109.32263445760707%2C44.402466852630184%2C-109.21079420473419%2C44.46633706933108&width=768&height=438&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        var eleLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/wms", {
             layers: "dr_test:elevation"
         });
         eleLayer.addTo(map);
 
         // add landcover data
-        var landcoverLayer = L.Geoserver.wms("http://192.168.1.2:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Alandcover&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        var landcoverLayer = L.Geoserver.wms("http://localhost:8080/geoserver/wms", {
             layers: "dr_test:landcover"
         });
         landcoverLayer.addTo(map);
