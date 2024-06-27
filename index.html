@@ -22,6 +22,7 @@
     <script src="https://unpkg.com/georaster"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="us_states.js"></script>
+    <script src="yellowstone.js"></script>
     <style>
         body{
             margin: 0;
@@ -33,52 +34,21 @@
             height: 100vh;
         }
         .legend {
-            position: absolute;
             background: rgba(255, 255, 255, 0.6);
-            padding: 8px;
-            line-height: 24px;
+            line-height: 1.5em;
+            padding: 5px;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
-        .gradient {
-            width: 20px;
-            height: 200px;
-            float: left;
+        .legend .gradient {
+            width: 150px;
+            height: 12px;
+            background: linear-gradient(to right, #000080, #0000ff, #008000, #00ff00, #ffff00, #ff7f00, #ff0000, #800000, #ffffff);
         }
-        .viridis {
-            width: 20px;
-            height: 200px;
-            float: left;
-        }
-        .legend-labels {
+        .legend .labels {
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
-            height: 200px;
-            margin-left: 25px;
-        }
-        .ndvi-legend {
-            bottom: 10px;
-            right: 10px;
-        }
-        .ele-legend {
-            bottom: 10px;
-            right: 85px;
-        }
-        .landcover-legend {
-            bottom: 260px;
-            right: 10px;
-        }
-        .map-title {
-            position: absolute;
-            bottom: 10px;
-            left: 90px;
-            font-size: 50px;
-            color: crimson;
-            font-family: Times New Roman, Times, serif;
-            z-index: 1000;
-            /* opacity: 0.75; */
-            text-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5);;
+            height: 20px;
         }
         .info {
             top: 1px;
@@ -142,13 +112,11 @@
     </style>
 </head>
 <body>
-    <h1 class="map-title">Geospatial Data Visualization</h1>
     <div id="map"></div>
-    
     <script>
         // initialize leaflet map
         var map = L.map('map', {
-            center: [37.053500, -102.056861],
+            center: [38.193809, -97.079591],
             zoom: 5
         });
 
@@ -160,10 +128,16 @@
         });
         osm.addTo(map)
 
+        var baseLayers = {
+            "Basemap": osm
+        };     
+
+        layerControl = L.control.layers(baseLayers, null, { collapsed: false }).addTo(map);
+
         // add usa states geojson with style to map
         geojson = L.geoJson(statesData, {
             style: {
-                "color": "darkgray",
+                "color": "navy",
                 "weight": 1.5,
                 "opacity": 0.9
             },
@@ -197,6 +171,8 @@
 
         geojson.bringToBack();
 
+        layerControl.addOverlay(geojson, 'USA Boundary')
+
         // add function to get states information while hovering
         var info = L.control();
 
@@ -223,6 +199,15 @@
         })
         .addTo(map);
 
+        boundary1 = L.geoJson(boundary, {
+            style: {
+                "color": "black",
+                "weight": 2,
+            }
+        }).addTo(map);
+
+        layerControl.addOverlay(boundary1, 'AOI Boundary')
+
         // URL to the GeoTIFF file on S3
         const geotiffUrl = 'https://geos-test1.s3.ap-south-1.amazonaws.com/elv_cog.tif';
 
@@ -246,9 +231,8 @@
             .then(response => response.arrayBuffer())
             .then(arrayBuffer => {
                 parseGeoraster(arrayBuffer).then(georaster => {
-                    const layer = new GeoRasterLayer({
+                    const elevationLayer = new GeoRasterLayer({
                         georaster: georaster,
-                        // opacity: 0.7,
                         pixelValuesToColorFn: values => {
                             const elevation = values[0]; // Assuming a single-band GeoTIFF
                             if (isNaN(elevation) || elevation === georaster.noDataValue) {
@@ -257,75 +241,82 @@
                             return elevationColorScale(elevation).hex();
                         }
                     });
-                    map.fitBounds(layer.getBounds());
-                    layer.addTo(map);
+                    elevationLayer.addTo(map);
+
+                    // Adding the elevation layer to the layer control
+                    layerControl.addOverlay(elevationLayer, "Elevation");
+
+                    // Create the legend control
+                    const legend = L.control({ position: 'bottomright' });
+
+                    legend.onAdd = function (map) {
+                        const div = L.DomUtil.create('div', 'legend');
+                        div.innerHTML = `
+                            <h4>Elevation (m)</h4>
+                            <div class="gradient"></div>
+                            <div class="labels">
+                                <span>0</span>
+                                <span>1500</span>
+                                <span>3000</span>
+                            </div>
+                        `;
+                        return div;
+                    };
+
+                    legend.addTo(map);
                 });
             });
 
-        // create legend for ndvi
-        var ndviLegend = L.control({ position: 'bottomright' });
-        ndviLegend.onAdd = function(map) {
-            var div = L.DomUtil.create('div', 'legend ndvi-legend');
-            div.innerHTML = '<b>NDVI</b><br>';
-            div.innerHTML += '<div class="gradient" style="background: linear-gradient(to bottom, #a50026, #d73027, #f46d43, #fdae61, #fee08b, #ffffbf, #d9ef8b, #a6d96a, #66bd63, #1a9850, #006837);"></div>';
-            div.innerHTML += '<div class="legend-labels"><span>1.0</span><span>0.0</span><span>-1.0</span></div>';
-            return div;
-        };
-        ndviLegend.addTo(map);
+            // URL to the GeoTIFF file on S3 (replace with your actual URL)
+            const ndviTiffUrl = 'https://geos-test1.s3.ap-south-1.amazonaws.com/ndvi_COG.tif';
 
-        // create legend for elevation
-        var eleLegend = L.control({ position: 'bottomright' });
-        eleLegend.onAdd = function(map) {
-            var div = L.DomUtil.create('div', 'legend ele-legend');
-            div.innerHTML = '<b>Elevation (m)</b><br>';
-            div.innerHTML += '<div class="viridis" style="background: linear-gradient(to bottom, #440154, #482878, #3e4a89, #31688e, #26838f, #1f9d8a, #6cce5a, #b6de2b, #fee825);"></div>';
-            div.innerHTML += '<div class="legend-labels"><span>5000</span><span>2500</span><span>0</span></div>';
-            return div;
-        };
-        eleLegend.addTo(map);
+        // Function to generate color based on NDVI
+        const ndviColorScale = chroma.scale(['#ff0000', '#ffff00', '#008000']).domain([-1, 1]);
 
-        // create a  legend
-        var landcoverlegend = L.control({ position: 'bottomright' });
-        landcoverlegend.onAdd = function(map) {
-            var div = L.DomUtil.create('div', 'legend landcover-legend');
-            div.innerHTML = '<b>Landcover Classes</b><br>';
-            div.innerHTML += '<i style="background: blue; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 1 Water<br>';
-            div.innerHTML += '<i style="background: darkgreen; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 2 Trees<br>';
-            div.innerHTML += '<i style="background: lime; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 3 Grass<br>';
-            div.innerHTML += '<i style="background: purple; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 4 Flooded Vegetation<br>'
-            div.innerHTML += '<i style="background: orange; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 5 Crops<br>';
-            div.innerHTML += '<i style="background: yellow; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 6 Shrub and Scrub<br>';
-            div.innerHTML += '<i style="background: red; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 7 Built<br>';
-            div.innerHTML += '<i style="background: brown; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 8 Bare<br>';
-            div.innerHTML += '<i style="background: white; width: 10px; height: 10px; display: inline-block; margin-right: 5px;"></i> 9 Snow<br>';
-            return div;
-        };
-        landcoverlegend.addTo(map);
+        // Add the NDVI layer
+        fetch(ndviTiffUrl)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => {
+                parseGeoraster(arrayBuffer).then(georaster => {
+                    const ndviLayer = new GeoRasterLayer({
+                        georaster: georaster,
+                        pixelValuesToColorFn: values => {
+                            const ndvi = values[0]; // Assuming a single-band GeoTIFF
+                            if (isNaN(ndvi) || ndvi === georaster.noDataValue) {
+                                return 'rgba(0,0,0,0)'; // Transparent for NaN or NoData values
+                            }
+                            return ndviColorScale(ndvi).hex();
+                        }
+                    });
+                    ndviLayer.addTo(map);
+                    // Adding the NDVI layer to the layer control
+                    layerControl.addOverlay(ndviLayer, "NDVI");
 
-        // create control layer panel
-        // create base layers
-        var baseLayers = {
-            "OSM": osm
-        };
+                    // Create the legend control
+                    const legend = L.control({ position: 'bottomright' });
 
-        // create overlay layers
-        var overlayLayers = {
-            "US States": geojson,
-        };
+                    legend.onAdd = function (map) {
+                        const div = L.DomUtil.create('div', 'legend');
+                        div.innerHTML = `
+                            <h4>NDVI</h4>
+                            <div class="gradient" style="background: linear-gradient(to right, #ff0000, #ffff00, #008000);"></div>
+                            <div class="labels">
+                                <span>-1</span>
+                                <span>0</span>
+                                <span>1</span>
+                            </div>
+                        `;
+                        return div;
+                    };
 
-        // add layer control
-        L.control.layers(baseLayers, overlayLayers, {collapsed:false, position: 'topright'}, autoZIndex=true).addTo(map);
-
-        // add scale to map
-        L.control.scale().addTo(map);
-
-        // map.fitBounds(wmsLayer.getBounds());
+                    legend.addTo(map);
+                });
+            });
 
         // function to get the pixel values from multiple layers at a clicked location
         const tiffUrls = {
             ndvi: "ndvi.tif",
-            elevation: "elevation.tif",
-            landcover: "landcover.tif"
+            elevation: "elevation.tif"
         };
         
         async function getPixelValues(latlng) {
@@ -350,26 +341,38 @@
                 .setContent(`
                     <b>NDVI:</b> ${pixelValues.ndvi}<br>
                     <b>Elevation:</b> ${pixelValues.elevation} meters<br>
-                    <b>Landcover:</b> ${pixelValues.landcover}
                 `)
             .openOn(map);
         });
 
+        // add scale to map
+        L.control.scale().addTo(map);    
+
         // add marker to map
-        var greenIcon = new L.Icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        var redIcon = new L.Icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
                             iconSize: [25, 41],
                             iconAnchor: [12, 41],
                             popupAnchor: [1, -34],
                             shadowSize: [41, 41]
         });
-        var dataMarker = L.marker([44.433913, -109.282475], { icon: greenIcon, riseOnHover:true });
+        var dataMarker = L.marker([44.433913, -109.282475], { icon: redIcon, riseOnHover:true });
         dataMarker.bindPopup('Hi, data is here!');
         dataMarker.bindTooltip('Data', {
             direction: "center"
         });
         dataMarker.addTo(map);
+
+        // Create the layer control and add to the map
+        var layerControl = L.control.layers({
+            "OpenStreetMap": osm
+        }, {
+            "US States": geojson,
+            "Boundary": boundary1,
+            "Elevation": elevationLayer,
+            "NDVI": ndviLayer
+        }).addTo(map);
  
     </script>
 </body>
