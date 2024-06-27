@@ -63,7 +63,7 @@
             right: 85px;
         }
         .landcover-legend {
-            top: 255px;
+            top: 245px;
             right: 10px;
         }
         .map-title {
@@ -79,7 +79,7 @@
         }
         .info {
             top: 1px;
-            right: 145px;
+            right: 150px;
             padding: 6px 8px;
             font: 14px/16px Arial, Helvetica, sans-serif;
             background: rgba(255, 255, 255, 0.6);
@@ -157,13 +157,6 @@
         });
         osm.addTo(map)
 
-        var stadi = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.{ext}', {
-            minZoom: 0,
-            maxZoom: 20,
-            attribution: '&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            ext: 'jpg'
-        });
-
         // add usa states geojson with style to map
         geojson = L.geoJson(statesData, {
             style: {
@@ -229,35 +222,65 @@
 
         // add vector data
         // add boundary of aoi
-        var boundary = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Abuffalo_bill&bbox=-109.3024461051902%2C44.3979530114709%2C-109.22635671141086%2C44.47404527068388&width=767&height=768&srs=EPSG%3A4269&styles=&format=application/openlayers#toggle", {
-            layers: "dr_test:buffalo_bill"
-        });
-        boundary.addTo(map);
+        // var boundary = L.Geoserver.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Abuffalo_bill&bbox=-109.3024461051902%2C44.3979530114709%2C-109.22635671141086%2C44.47404527068388&width=767&height=768&srs=EPSG%3A4269&styles=&format=application/openlayers#toggle", {
+        //     layers: "dr_test:buffalo_bill"
+        // });
+        // boundary.addTo(map);
+        var boundary = L.tileLayer.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS", {
+            layers: "buffalo_bill",
+            format: "image/png",
+            transparent: true,
+            
+        }).addTo(map);
 
         // add raster data
         // add satellite image
-        var satelliteLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Araw&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
-            layers: "dr_test:raw"
-        });
-        satelliteLayer.addTo(map);
+        // var satelliteLayer = L.Geoserver.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Araw&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        //     layers: "dr_test:raw"
+        // });
+        // satelliteLayer.addTo(map);
+        var satelliteLayer = L.tileLayer.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS", {
+            layers: "raw",
+            format: "image/png",
+            transparent: true,
+            
+        }).addTo(map);
 
         // add ndvi data
-        var ndviLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Andvi&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
-            layers: "dr_test:ndvi"
-        });
-        ndviLayer.addTo(map);
+        // var ndviLayer = L.Geoserver.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Andvi&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        //     layers: "dr_test:ndvi"
+        // });
+        // ndviLayer.addTo(map);
+        var ndviLayer = L.tileLayer.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS", {
+            layers: "ndvi",
+            format: "image/png",
+            transparent: true,
+            
+        }).addTo(map);
 
         // add elevation data
-        var eleLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Aelevation&bbox=-109.32263445760707%2C44.402466852630184%2C-109.21079420473419%2C44.46633706933108&width=768&height=438&srs=EPSG%3A4326&styles=&format=application/openlayers", {
-            layers: "dr_test:elevation"
-        });
-        eleLayer.addTo(map);
+        // var eleLayer = L.Geoserver.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Aelevation&bbox=-109.32263445760707%2C44.402466852630184%2C-109.21079420473419%2C44.46633706933108&width=768&height=438&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        //     layers: "dr_test:elevation"
+        // });
+        // eleLayer.addTo(map);
+        var eleLayer = L.tileLayer.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS", {
+            layers: "elevation",
+            format: "image/png",
+            transparent: true,
+            
+        }).addTo(map);
 
         // add landcover data
-        var landcoverLayer = L.Geoserver.wms("http://192.168.0.220:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Alandcover&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
-            layers: "dr_test:landcover"
-        });
-        landcoverLayer.addTo(map);
+        // var landcoverLayer = L.Geoserver.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS&version=1.1.0&request=GetMap&layers=dr_test%3Alandcover&bbox=-109.32245479455023%2C44.4025566841586%2C-109.21088403626258%2C44.466157406274256&width=768&height=437&srs=EPSG%3A4326&styles=&format=application/openlayers", {
+        //     layers: "dr_test:landcover"
+        // });
+        // landcoverLayer.addTo(map);
+        var landcoverLayer = L.tileLayer.wms("http://localhost:8080/geoserver/dr_test/wms?service=WMS", {
+            layers: "landcover",
+            format: "image/png",
+            transparent: true,
+            
+        }).addTo(map);
 
         // create legend for ndvi
         var ndviLegend = L.control({ position: 'bottomright' });
@@ -302,8 +325,7 @@
         // create control layer panel
         // create base layers
         var baseLayers = {
-            "OSM": osm,
-            "Satellite": stadi
+            "OSM": osm
         };
 
         // create overlay layers
